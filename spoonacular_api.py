@@ -8,17 +8,16 @@ BASE_URL = "https://api.spoonacular.com/recipes/complexSearch"
 def get_recipe(ingredient=None):
     """
     Ищет рецепт через Spoonacular API.
-    Если указан ингредиент, поиск ведется по нему, иначе используется общий запрос.
-    Обрабатываются случаи, когда API не возвращает рецептов или отсутствуют
-    инструкции и ингредиенты.
+    Если указан ингредиент – выполняется поиск по нему.
+    Обрабатываются ситуации, когда результаты пустые или отсутствуют инструкции и ингредиенты.
     """
     params = {
         'apiKey': API_KEY,
-        'number': 1,  # Вернём только 1 рецепт
-        'addRecipeInformation': True  # Получаем расширенную информацию о рецепте
+        'number': 1,  # Вернем только 1 рецепт
+        'addRecipeInformation': True  # Расширенная информация о рецепте
     }
 
-    # Если задан ингредиент, добавляем его в параметры запроса
+    # Если задан ингредиент, добавляем его в параметры
     if ingredient:
         params['query'] = ingredient
     else:
@@ -28,24 +27,19 @@ def get_recipe(ingredient=None):
         response = requests.get(BASE_URL, params=params)
         if response.status_code == 200:
             data = response.json()
-            # Проверяем наличие результатов
             recipes = data.get("results", [])
             if not recipes:
                 return "Рецепты по заданному запросу не найдены."
 
-            # Выбираем первый найденный рецепт
             recipe = recipes[0]
             title = recipe.get("title", "Без названия").strip()
 
             # Обработка ингредиентов
             ingredients = []
             if recipe.get("extendedIngredients"):
-                ingredients = [ing.get("name", "").strip() for ing in recipe["extendedIngredients"] if
-                               ing.get("name", "").strip() != ""]
-            if not ingredients:
-                ingredients_text = "Ингредиенты отсутствуют."
-            else:
-                ingredients_text = "\n".join(ingredients)
+                ingredients = [ing.get("name", "").strip()
+                               for ing in recipe["extendedIngredients"] if ing.get("name", "").strip() != ""]
+            ingredients_text = "\n".join(ingredients) if ingredients else "Ингредиенты отсутствуют."
 
             # Обработка инструкций
             instructions = recipe.get("instructions", "")
@@ -62,3 +56,4 @@ def get_recipe(ingredient=None):
             return f"Ошибка запроса к Spoonacular API: {response.status_code}"
     except Exception as e:
         return f"Произошла ошибка при подключении к Spoonacular API: {e}"
+

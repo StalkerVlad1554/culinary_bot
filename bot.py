@@ -1,14 +1,24 @@
-import telebot
+from aiogram import Bot, Dispatcher
+from aiogram.types import ParseMode
+from aiogram.utils import executor
+import logging
 from handlers import register_handlers
 
-# Замените на ваш Telegram-бот токен, полученный у BotFather
+# Замените на ваш Telegram-бот токен
 BOT_TOKEN = '7715487624:AAFsZkizvCJNO2u5FtF21fr6CPF3Z8nnULw'
 
-bot = telebot.TeleBot(BOT_TOKEN)
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
-# Регистрируем обработчики команд и сообщений
-register_handlers(bot)
+# Инициализация бота и диспетчера
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher(bot)
+
+# Регистрация обработчиков
+register_handlers(dp)
 
 if __name__ == '__main__':
     print("Бот запущен!")
-    bot.infinity_polling()
+    executor.start_polling(dp, skip_updates=True)
+
+
