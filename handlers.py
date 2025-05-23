@@ -1,34 +1,45 @@
 from aiogram import types, Dispatcher
 from spoonacular_api import get_recipe
 from translation import translate_text
+from loader import router
+from aiogram import F
+from aiogram.types import Message
+from aiogram.filters import Command
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from key import kb_menu
 
 
-async def start_handler(message: types.Message):
-    """Обработчик команды /start"""
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("Случайный рецепт", "По ингредиенту", "/translate")
-    await message.reply(
-        "Привет! Я кулинарный бот с поддержкой перевода текста.\n\n"
+@router.message(Command('start'))
+async def start_handler(message: Message):
+    builder = ReplyKeyboardBuilder()
+    for button in kb_menu:
+        builder.add(button)
+    builder.adjust(1)
+    await message.answer(text="Привет! Я кулинарный бот с поддержкой перевода текста.\n\n"
         "Выбери опцию:\n"
         "• 'Случайный рецепт' для получения рецепта через Spoonacular API.\n"
         "• 'По ингредиенту' для поиска рецепта с конкретным ингредиентом.\n\n"
         "Для перевода текста используй команду:\n"
         "/translate <код_языка> <текст для перевода>",
-        reply_markup=markup,
-    )
+                         reply_markup=builder.as_markup(resize_keyboard=True))
 
 
-async def recipe_handler(message: types.Message):
-    """Обработчик выбора рецепта"""
-    text = message.text.strip().lower()
-    if text == "случайный рецепт":
-        recipe = await get_recipe()
-        await message.reply(recipe)
-    elif text == "по ингредиенту":
-        await message.reply("Введите ингредиент для поиска рецепта:")
-    else:
-        recipe = await get_recipe(ingredient=text)
-        await message.reply(recipe)
+
+@router.message(F.text == 'Случайный рецепт')
+async def random_recipe(message: Message):
+    recipe = get_recipe()
+    await message.reply(recipe)
+
+@router.message(F.text == 'По ингредиенту')
+async def recipe(message: Message):
+    await message.reply("Введите ингредиент для поиска рецепта:")
+
+@router.message()
+async def get1_recipe(message: Message):
+    ingredients = message.text
+    await message.answer(get_recipe(ingredients))
+
+
 
 
 async def translate_handler(message: types.Message):
@@ -44,8 +55,3 @@ async def translate_handler(message: types.Message):
     await message.reply(translation)
 
 
-def register_handlers(dp: Dispatcher):
-    """Регистрация обработчиков"""
-    dp.register_message_handler(start_handler, commands=["start", "help"])
-    dp.register_message_handler(recipe_handler, content_types=["text"])
-    dp.register_message_handler(translate_handler, commands=["translate"])

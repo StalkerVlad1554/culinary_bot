@@ -2,7 +2,7 @@ from googletrans import Translator
 
 translator = Translator()
 
-def translate_text(text, src='auto', dest='rus'):
+def translate_text(text, src='en', dest='rus'):
     """
     Переводит текст с исходного языка (src) на целевой язык (dest).
     Если src задан как 'auto', исходный язык определяется автоматически.
